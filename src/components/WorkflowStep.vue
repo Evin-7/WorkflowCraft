@@ -6,7 +6,6 @@
     ]"
     @click.stop="$emit('set-active')"
   >
-    <!-- Tooltip -->
     <div
       class="absolute top-2 right-2 bg-teal-600 text-white text-xs font-medium rounded-md px-2 py-1 shadow-lg opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transform transition-all duration-200 pointer-events-none z-10"
     >

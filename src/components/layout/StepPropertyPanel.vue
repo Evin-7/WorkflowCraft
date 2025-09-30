@@ -96,7 +96,6 @@
         :disabled="workflowLength === 0"
         @click="$emit('export-workflow')"
       >
-        <DownloadIcon class="w-5 h-5" />
         <span>Export JSON</span>
       </button>
 
@@ -110,26 +109,28 @@
           >{{ jsonExport }}</pre
         >
         <button
-          class="absolute top-4 right-4 text-xs text-teal-600 hover:text-teal-800 font-medium bg-white p-1 rounded"
-          @click="$emit('copy-to-clipboard')"
+          class="absolute top-4 right-4 text-xs text-teal-600 hover:text-teal-800 font-medium bg-white p-1 rounded transition-opacity"
+          :class="{ 'opacity-0': copied }"
+          @click.stop="handleCopy"
+          :disabled="copied"
         >
           Copy
         </button>
+        <div
+          v-if="copied"
+          class="absolute top-4 right-4 text-xs font-semibold text-white bg-green-500 px-2 py-1 rounded-md transition-opacity"
+        >
+          Copied!
+        </div>
       </div>
     </div>
   </aside>
 </template>
 
 <script setup>
-import { computed } from "vue";
-import XIcon from "../icons/XIcon.vue"; // Assuming XIcon is in the icons folder
-import PlayIcon from "../icons/PlayIcon.vue"; // Assuming PlayIcon is in the icons folder
-
-// Icon component passed from parent (App.vue)
-const DownloadIcon = {
-  template:
-    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>',
-};
+import { computed, ref } from "vue";
+import XIcon from "../icons/XIcon.vue";
+import PlayIcon from "../icons/PlayIcon.vue";
 
 const props = defineProps({
   isMobile: Boolean,
@@ -157,7 +158,7 @@ const emit = defineEmits([
   "simulate-workflow",
   "export-workflow",
   "copy-to-clipboard",
-  "update:activeStep", // For prop changes
+  "update:activeStep",
 ]);
 
 const panelTitle = computed(() => {
@@ -166,7 +167,6 @@ const panelTitle = computed(() => {
     : "Workflow Actions";
 });
 
-// Function to handle property updates for two-way data flow from the parent
 const updateProp = (key, value) => {
   if (props.activeStep) {
     const updatedStep = {
@@ -179,10 +179,28 @@ const updateProp = (key, value) => {
     emit("update:activeStep", updatedStep);
   }
 };
+
+const copied = ref(false);
+
+const handleCopy = () => {
+  if (props.jsonExport) {
+    navigator.clipboard
+      .writeText(props.jsonExport)
+      .then(() => {
+        copied.value = true;
+        emit("copy-to-clipboard");
+        setTimeout(() => {
+          copied.value = false;
+        }, 2000);
+      })
+      .catch((err) => {
+        console.error("Failed to copy text: ", err);
+      });
+  }
+};
 </script>
 
 <style scoped>
-/* Inheriting the styles from App.vue for the property editor */
 .property-editor input,
 .property-editor textarea {
   @apply w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500;
