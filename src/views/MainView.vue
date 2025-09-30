@@ -230,7 +230,8 @@ function handleTouchEnd(event) {
   if (!draggingBlock.value) return;
   const touch = event.changedTouches[0];
   const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-  const mainLayoutElement = document.querySelector(".main-layout");
+  // use .canvas (your main area) instead of .main-layout
+  const mainLayoutElement = document.querySelector(".canvas");
   const droppedOnValidArea =
     mainLayoutElement && mainLayoutElement.contains(targetElement);
   if (droppedOnValidArea) {
@@ -314,8 +315,23 @@ function exportWorkflow() {
     props: step.props,
   }));
   const data = { workflow: cleanWorkflow };
-  jsonExport.value = JSON.stringify(data, null, 2);
+  const jsonStr = JSON.stringify(data, null, 2);
+  jsonExport.value = jsonStr;
   clearActiveStep();
+  try {
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    a.download = `workflowcraft-${ts}.json`;
+    a.href = url;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error("Failed to download JSON:", err);
+  }
 }
 
 function copyToClipboard() {
