@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col">
+  <div class="min-h-screen font-poppins bg-gray-50 flex flex-col">
     <HeaderBar @toggle-sidebar="toggleSidebar" />
     <div class="flex flex-1 relative overflow-hidden">
       <Sidebar
@@ -79,9 +79,16 @@
       :getBlockColor="getBlockColor"
       :getIconComponent="getIconComponent"
     />
+
+    <Modal
+      :open="showModal"
+      :steps="workflow"
+      :getBlockColor="getBlockColor"
+      :getStepDetail="getStepDetail"
+      @close="showModal = false"
+    />
   </div>
 </template>
-
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
@@ -91,11 +98,11 @@ import StepPropertyPanel from "./components/layout/StepPropertyPanel.vue";
 import WorkflowStep from "./components/WorkflowStep.vue";
 import EmptyCanvasState from "./components/EmptyCanvasState.vue";
 import DraggingBlockPreview from "./components/DraggingBlockPreview.vue";
+import Modal from "./components/Modal.vue";
 import MenuIcon from "./components/icons/MenuIcon.vue";
 import SendIcon from "./components/icons/SendIcon.vue";
 import ClockIcon from "./components/icons/ClockIcon.vue";
 import MessageCircleIcon from "./components/icons/MessageCircleIcon.vue";
-
 const iconMap = {
   send: SendIcon,
   clock: ClockIcon,
@@ -134,7 +141,7 @@ const blockDefinitions = [
   {
     type: "Send WhatsApp",
     icon: "message-circle",
-    color: "#F4A261",
+    color: "#0D7C66",
     defaultProps: {
       phone: "+1234567890",
       message: "Hi, this is a default WhatsApp message.",
@@ -181,7 +188,7 @@ watch(
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newWorkflow));
     jsonExport.value = null;
   },
-  { deep: true }
+  { deep: true },
 );
 
 const toggleSidebar = () => {
@@ -294,14 +301,11 @@ function getStepDetail(step) {
   return "";
 }
 
+const showModal = ref(false);
+
 function simulateWorkflow() {
   if (workflow.value.length === 0) return;
-  const steps = workflow.value
-    .map((step, i) => `${i + 1}. ${step.type} (${getStepDetail(step)})`)
-    .join("\n");
-  alert(
-    `Workflow Simulation\n\n${steps}\n\nTotal Steps: ${workflow.value.length}`
-  );
+  showModal.value = true;
 }
 
 function exportWorkflow() {

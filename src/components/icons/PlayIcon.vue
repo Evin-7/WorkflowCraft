@@ -12,8 +12,8 @@
     <polygon points="6 4 20 12 6 20 6 4"></polygon>
   </svg>
 </template>
-  
-  <script setup>
+
+<script setup>
 defineProps({
   color: {
     type: String,
@@ -21,4 +21,3 @@ defineProps({
   },
 });
 </script>
-  
