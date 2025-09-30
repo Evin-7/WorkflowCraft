@@ -24,7 +24,6 @@ import PlusIcon from "./icons/PlusIcon.vue";
 </script>
 
 <style scoped>
-/* Optional subtle pulse animation on the plus icon */
 .group:hover svg {
   animation: pulse 1s infinite;
 }
