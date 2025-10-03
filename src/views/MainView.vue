@@ -10,6 +10,8 @@
         @close-sidebar="closeSidebar"
         @dragstart="handleDragStart"
         @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"   
+  @touchend="handleTouchEnd"
       />
       <div
         v-if="sidebarOpen && isMobile"
@@ -79,6 +81,7 @@
       :getBlockColor="getBlockColor"
       :getIconComponent="getIconComponent"
     />
+
     <Modal
       :open="showModal"
       :steps="workflow"
@@ -102,27 +105,25 @@ import MenuIcon from "../components/icons/MenuIcon.vue";
 import SendIcon from "../components/icons/SendIcon.vue";
 import ClockIcon from "../components/icons/ClockIcon.vue";
 import MessageCircleIcon from "../components/icons/MessageCircleIcon.vue";
-
 const iconMap = {
   send: SendIcon,
   clock: ClockIcon,
   "message-circle": MessageCircleIcon,
 };
-
 const getIconComponent = (name) => iconMap[name];
-const getBlockIcon = (type) => blockDefinitions.find((b) => b.type === type)?.icon;
-const getBlockColor = (type) => blockDefinitions.find((b) => b.type === type)?.color || "#0D7C66";
+const getBlockIcon = (type) =>
+  blockDefinitions.find((b) => b.type === type)?.icon;
+const getBlockColor = (type) =>
+  blockDefinitions.find((b) => b.type === type)?.color || "#0D7C66";
 
 const isMobile = ref(false);
 const checkMobile = () => {
   isMobile.value = window.innerWidth < 768;
 };
-
 onMounted(() => {
   checkMobile();
   window.addEventListener("resize", checkMobile);
 });
-
 onUnmounted(() => {
   window.removeEventListener("resize", checkMobile);
 });
@@ -154,6 +155,7 @@ const workflow = ref([]);
 const sidebarOpen = ref(false);
 const activeStepIndex = ref(null);
 const jsonExport = ref(null);
+
 const draggingBlock = ref(null);
 const dragPosition = ref({ x: 0, y: 0 });
 
@@ -172,33 +174,34 @@ onMounted(() => {
       workflow.value = [];
     }
   }
-  // FIXED: Added { passive: false } to touchstart as well
-  document.addEventListener("touchmove", handleTouchMove, { passive: false });
-  document.addEventListener("touchend", handleTouchEnd, { passive: false });
+  
+  // DELETE THESE TWO LINES:
+  // document.addEventListener("touchmove", handleTouchMove, { passive: false });
+  // document.addEventListener("touchend", handleTouchEnd);
 });
 
 onUnmounted(() => {
-  document.removeEventListener("touchmove", handleTouchMove);
-  document.removeEventListener("touchend", handleTouchEnd);
+  window.removeEventListener("resize", checkMobile);
+  
+  // DELETE THESE TWO LINES:
+  // document.removeEventListener("touchmove", handleTouchMove);
+  // document.removeEventListener("touchend", handleTouchEnd);
 });
-
 watch(
   workflow,
   (newWorkflow) => {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newWorkflow));
     jsonExport.value = null;
   },
-  { deep: true }
+  { deep: true },
 );
 
 const toggleSidebar = () => {
   sidebarOpen.value = !sidebarOpen.value;
 };
-
 const closeSidebar = () => {
   sidebarOpen.value = false;
 };
-
 const closePanel = () => {
   activeStepIndex.value = null;
 };
@@ -211,58 +214,56 @@ function handleDragStart(event, block) {
 
 function handleTouchStart(event, block) {
   if (!isMobile.value) return;
-  
-  // FIXED: Prevent default to stop scrolling during drag
-  event.preventDefault();
-  event.stopPropagation();
+  // DELETE THIS LINE: event.preventDefault();
   
   const touch = event.touches[0];
   const blockWithId = { ...block, id: Date.now() + Math.random() };
+
   draggingBlock.value = blockWithId;
   dragPosition.value = { x: touch.clientX, y: touch.clientY };
 }
 
 function handleTouchMove(event) {
   if (!draggingBlock.value) return;
-  
-  // FIXED: Prevent scrolling while dragging
-  event.preventDefault();
-  event.stopPropagation();
+  // DELETE THIS LINE: event.preventDefault();
   
   const touch = event.touches[0];
   dragPosition.value = { x: touch.clientX, y: touch.clientY };
 }
-
 function handleTouchEnd(event) {
   if (!draggingBlock.value) return;
-  
-  event.preventDefault();
-  
   const touch = event.changedTouches[0];
-  const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-  
-  // FIXED: Better target detection
   const mainLayoutElement = document.querySelector(".canvas");
-  const droppedOnValidArea = mainLayoutElement && mainLayoutElement.contains(targetElement);
-  
-  if (droppedOnValidArea) {
-    // Create the block directly instead of simulating event
-    workflow.value.push({
-      id: draggingBlock.value.id,
-      type: draggingBlock.value.type,
-      props: { ...draggingBlock.value.defaultProps },
-    });
+
+  if (mainLayoutElement) {
+    const rect = mainLayoutElement.getBoundingClientRect();
+    const inside =
+      touch.clientX >= rect.left &&
+      touch.clientX <= rect.right &&
+      touch.clientY >= rect.top &&
+      touch.clientY <= rect.bottom;
+
+    if (inside) {
+      workflow.value.push({
+        id: draggingBlock.value.id,
+        type: draggingBlock.value.type,
+        props: { ...draggingBlock.value.defaultProps },
+      });
+    }
   }
-  
-  // FIXED: Clear dragging state
+
   draggingBlock.value = null;
-  dragPosition.value = { x: 0, y: 0 };
   closeSidebar();
 }
 
+
 function handleDrop(event) {
   event.preventDefault();
-  let blockData = event.dataTransfer ? event.dataTransfer.getData("block") : null;
+
+  let blockData = event.dataTransfer
+    ? event.dataTransfer.getData("block")
+    : null;
+
   if (blockData) {
     const block = JSON.parse(blockData);
     workflow.value.push({
@@ -303,7 +304,8 @@ function clearActiveStep() {
 function getStepDetail(step) {
   const props = step.props || {};
   if (step.type === "Wait") return `Duration: ${props.days || 0} day(s)`;
-  if (step.type === "Send Email") return `Subject: ${props.subject || "No Subject"}`;
+  if (step.type === "Send Email")
+    return `Subject: ${props.subject || "No Subject"}`;
   if (step.type === "Send WhatsApp") return `Target: ${props.phone || "N/A"}`;
   return "";
 }
@@ -324,7 +326,6 @@ function exportWorkflow() {
   const jsonStr = JSON.stringify(data, null, 2);
   jsonExport.value = jsonStr;
   clearActiveStep();
-
   try {
     const blob = new Blob([jsonStr], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -353,17 +354,14 @@ function copyToClipboard() {
 .slide-fade-leave-active {
   transition: all 0.3s ease-out;
 }
-
 .slide-fade-enter-from,
 .slide-fade-leave-to {
   transform: translateX(-100%);
 }
-
 .slide-fade-right-enter-active,
 .slide-fade-right-leave-active {
   transition: all 0.3s ease-out;
 }
-
 .slide-fade-right-enter-from,
 .slide-fade-right-leave-to {
   transform: translateX(100%);
@@ -373,15 +371,7 @@ function copyToClipboard() {
 .property-editor textarea {
   @apply w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500;
 }
-
 .property-editor label {
   @apply block text-sm font-medium text-gray-700 mb-1 mt-3;
-}
-.canvas {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  touch-action: none;
 }
 </style>

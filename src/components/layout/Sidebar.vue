@@ -17,26 +17,32 @@
     >
       <XIcon class="w-6 h-6" />
     </button>
+
     <div class="p-6">
       <h2 class="text-xl font-bold text-teal-700 mb-6 border-b pb-2">
         Workflow Blocks
       </h2>
+
       <p class="text-sm text-gray-600 mb-4">
-        {{ isMobile ? 'Touch and drag a block onto the canvas.' : 'Drag and drop a block onto the canvas.' }}
+        Drag and drop a block onto the canvas.
       </p>
+
       <div class="space-y-3">
         <div
           v-for="block in blockDefinitions"
           :key="block.type"
           :draggable="!isMobile"
-          class="block-item bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-grab active:cursor-grabbing"
+          class="block-item bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-grab active:cursor-grabbing animate-in fade-in slide-in-from-left-2"
           :style="{ 'border-left': `5px solid ${block.color}` }"
           @dragstart="handleDragStart($event, block)"
-          @touchstart.passive="handleTouchStart($event, block)"
+          @touchstart.stop="handleTouchStart($event, block)"
+          @touchmove="handleTouchMove"    
+  @touchend="handleTouchEnd"   
         >
-          <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-4 hover:animate-wiggle">
+            <!-- Icon with tinted background -->
             <div
-              class="p-3 rounded-lg flex-shrink-0 transition-transform duration-300"
+              class="p-3 rounded-lg flex-shrink-0 transition-transform duration-300 group-hover:rotate-6"
               :style="{ background: `${block.color}15` }"
             >
               <component
@@ -45,12 +51,13 @@
                 class="w-6 h-6"
               />
             </div>
+
             <div class="flex flex-col">
               <span class="font-semibold text-gray-800 text-base">
                 {{ block.type }}
               </span>
               <span class="text-xs text-gray-500">
-                {{ block.description || (isMobile ? 'Touch to drag' : 'Drag to add') }}
+                {{ block.description || "Drag to add this block" }}
               </span>
             </div>
           </div>
@@ -64,20 +71,38 @@
 import XIcon from "../icons/XIcon.vue";
 
 const props = defineProps({
-  sidebarOpen: { type: Boolean, required: true },
-  isMobile: { type: Boolean, required: true },
-  blockDefinitions: { type: Array, required: true },
-  getIconComponent: { type: Function, required: true },
+  sidebarOpen: {
+    type: Boolean,
+    required: true,
+  },
+  isMobile: {
+    type: Boolean,
+    required: true,
+  },
+  blockDefinitions: {
+    type: Array,
+    required: true,
+  },
+  getIconComponent: {
+    type: Function,
+    required: true,
+  },
 });
 
-const emit = defineEmits(["close-sidebar", "dragstart", "touchstart"]);
+const emit = defineEmits(["close-sidebar", "dragstart", "touchstart", "touchmove", "touchend"]);
 
 const handleDragStart = (event, block) => {
   emit("dragstart", event, block);
 };
 
 const handleTouchStart = (event, block) => {
-  // Let the parent handle preventDefault if needed
   emit("touchstart", event, block);
+};
+const handleTouchMove = (event) => {
+  emit("touchmove", event);
+};
+
+const handleTouchEnd = (event) => {
+  emit("touchend", event);
 };
 </script>
