@@ -17,11 +17,12 @@
         @click="closeSidebar"
       ></div>
       <main
-        class="canvas flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50 transition-all duration-300"
-        @dragover.prevent
-        @drop="handleDrop"
-        @click="clearActiveStep"
-      >
+  class="canvas flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50 transition-all duration-300"
+  @dragover.prevent
+  @drop="handleDrop"
+  @click="clearActiveStep"
+  :style="{ touchAction: draggingBlock ? 'none' : 'auto' }"
+>
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl md:text-2xl font-bold text-teal-700">
             Workflow Canvas
@@ -217,7 +218,11 @@ function handleTouchStart(event, block) {
 
   draggingBlock.value = blockWithId;
   dragPosition.value = { x: touch.clientX, y: touch.clientY };
+
+  // <<< close the sidebar right away so the canvas is exposed while dragging
+  closeSidebar();
 }
+
 
 function handleTouchMove(event) {
   if (!draggingBlock.value) return;
@@ -229,24 +234,22 @@ function handleTouchMove(event) {
 
 function handleTouchEnd(event) {
   if (!draggingBlock.value) return;
-
   const touch = event.changedTouches[0];
   const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-
-  // climb up to see if it's inside the canvas
-  const canvasElement = targetElement?.closest(".canvas");
+  const canvasElement = targetElement?.closest?.(".canvas");
   if (canvasElement) {
-    // simulate drop same as desktop
     workflow.value.push({
       id: draggingBlock.value.id,
       type: draggingBlock.value.type,
       props: { ...draggingBlock.value.defaultProps },
     });
   }
-
   draggingBlock.value = null;
+  console.log('touch coords', touch.clientX, touch.clientY, 'target:', targetElement, 'closestCanvas:', canvasElement);
   closeSidebar();
+
 }
+
 
 
 function handleDrop(event) {
