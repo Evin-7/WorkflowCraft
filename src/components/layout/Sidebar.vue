@@ -36,6 +36,8 @@
           :style="{ 'border-left': `5px solid ${block.color}` }"
           @dragstart="handleDragStart($event, block)"
           @touchstart.stop="handleTouchStart($event, block)"
+          @touchmove="handleTouchMove"    
+  @touchend="handleTouchEnd"   
         >
           <div class="flex items-center space-x-4 hover:animate-wiggle">
             <!-- Icon with tinted background -->
@@ -87,7 +89,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["close-sidebar", "dragstart", "touchstart"]);
+const emit = defineEmits(["close-sidebar", "dragstart", "touchstart", "touchmove", "touchend"]);
 
 const handleDragStart = (event, block) => {
   emit("dragstart", event, block);
@@ -95,5 +97,12 @@ const handleDragStart = (event, block) => {
 
 const handleTouchStart = (event, block) => {
   emit("touchstart", event, block);
+};
+const handleTouchMove = (event) => {
+  emit("touchmove", event);
+};
+
+const handleTouchEnd = (event) => {
+  emit("touchend", event);
 };
 </script>

@@ -10,6 +10,8 @@
         @close-sidebar="closeSidebar"
         @dragstart="handleDragStart"
         @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"   
+  @touchend="handleTouchEnd"
       />
       <div
         v-if="sidebarOpen && isMobile"
@@ -172,17 +174,19 @@ onMounted(() => {
       workflow.value = [];
     }
   }
-
-  document.addEventListener("touchmove", handleTouchMove, { passive: false });
-  document.addEventListener("touchend", handleTouchEnd, { passive: false });
-
+  
+  // DELETE THESE TWO LINES:
+  // document.addEventListener("touchmove", handleTouchMove, { passive: false });
+  // document.addEventListener("touchend", handleTouchEnd);
 });
 
 onUnmounted(() => {
-  document.removeEventListener("touchmove", handleTouchMove);
-  document.removeEventListener("touchend", handleTouchEnd);
+  window.removeEventListener("resize", checkMobile);
+  
+  // DELETE THESE TWO LINES:
+  // document.removeEventListener("touchmove", handleTouchMove);
+  // document.removeEventListener("touchend", handleTouchEnd);
 });
-
 watch(
   workflow,
   (newWorkflow) => {
@@ -210,8 +214,8 @@ function handleDragStart(event, block) {
 
 function handleTouchStart(event, block) {
   if (!isMobile.value) return;
-  event.preventDefault();
-
+  // DELETE THIS LINE: event.preventDefault();
+  
   const touch = event.touches[0];
   const blockWithId = { ...block, id: Date.now() + Math.random() };
 
@@ -221,12 +225,11 @@ function handleTouchStart(event, block) {
 
 function handleTouchMove(event) {
   if (!draggingBlock.value) return;
-  event.preventDefault();
-
+  // DELETE THIS LINE: event.preventDefault();
+  
   const touch = event.touches[0];
   dragPosition.value = { x: touch.clientX, y: touch.clientY };
 }
-
 function handleTouchEnd(event) {
   if (!draggingBlock.value) return;
   const touch = event.changedTouches[0];
