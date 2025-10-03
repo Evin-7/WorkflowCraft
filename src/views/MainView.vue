@@ -10,8 +10,6 @@
         @close-sidebar="closeSidebar"
         @dragstart="handleDragStart"
         @touchstart="handleTouchStart"
-        @touchmove="handleTouchMove"   
-  @touchend="handleTouchEnd"
       />
       <div
         v-if="sidebarOpen && isMobile"
@@ -174,19 +172,16 @@ onMounted(() => {
       workflow.value = [];
     }
   }
-  
-  // DELETE THESE TWO LINES:
-  // document.addEventListener("touchmove", handleTouchMove, { passive: false });
-  // document.addEventListener("touchend", handleTouchEnd);
+
+  document.addEventListener("touchmove", handleTouchMove, { passive: false });
+  document.addEventListener("touchend", handleTouchEnd);
 });
 
 onUnmounted(() => {
-  window.removeEventListener("resize", checkMobile);
-  
-  // DELETE THESE TWO LINES:
-  // document.removeEventListener("touchmove", handleTouchMove);
-  // document.removeEventListener("touchend", handleTouchEnd);
+  document.removeEventListener("touchmove", handleTouchMove);
+  document.removeEventListener("touchend", handleTouchEnd);
 });
+
 watch(
   workflow,
   (newWorkflow) => {
@@ -212,10 +207,11 @@ function handleDragStart(event, block) {
   event.dataTransfer.effectAllowed = "copy";
 }
 
+
 function handleTouchStart(event, block) {
   if (!isMobile.value) return;
-  // DELETE THIS LINE: event.preventDefault();
-  
+  event.preventDefault();
+
   const touch = event.touches[0];
   const blockWithId = { ...block, id: Date.now() + Math.random() };
 
@@ -225,31 +221,27 @@ function handleTouchStart(event, block) {
 
 function handleTouchMove(event) {
   if (!draggingBlock.value) return;
-  // DELETE THIS LINE: event.preventDefault();
-  
+  event.preventDefault();
+
   const touch = event.touches[0];
   dragPosition.value = { x: touch.clientX, y: touch.clientY };
 }
+
 function handleTouchEnd(event) {
   if (!draggingBlock.value) return;
+
   const touch = event.changedTouches[0];
-  const mainLayoutElement = document.querySelector(".canvas");
+  const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
 
-  if (mainLayoutElement) {
-    const rect = mainLayoutElement.getBoundingClientRect();
-    const inside =
-      touch.clientX >= rect.left &&
-      touch.clientX <= rect.right &&
-      touch.clientY >= rect.top &&
-      touch.clientY <= rect.bottom;
-
-    if (inside) {
-      workflow.value.push({
-        id: draggingBlock.value.id,
-        type: draggingBlock.value.type,
-        props: { ...draggingBlock.value.defaultProps },
-      });
-    }
+  // climb up to see if it's inside the canvas
+  const canvasElement = targetElement?.closest(".canvas");
+  if (canvasElement) {
+    // simulate drop same as desktop
+    workflow.value.push({
+      id: draggingBlock.value.id,
+      type: draggingBlock.value.type,
+      props: { ...draggingBlock.value.defaultProps },
+    });
   }
 
   draggingBlock.value = null;
@@ -260,10 +252,7 @@ function handleTouchEnd(event) {
 function handleDrop(event) {
   event.preventDefault();
 
-  let blockData = event.dataTransfer
-    ? event.dataTransfer.getData("block")
-    : null;
-
+  const blockData = event.dataTransfer?.getData("block");
   if (blockData) {
     const block = JSON.parse(blockData);
     workflow.value.push({
