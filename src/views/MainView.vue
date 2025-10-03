@@ -29,7 +29,7 @@
           </h2>
           <button
             v-if="!activeStep && isMobile && workflow.length > 0"
-            class="py-2 px-3 bg-teal-500 text-white text-sm font-semibold rounded-lg hover:bg-teal-600"
+            class="py-2 px-3 bg-teal-700 text-white text-sm font-semibold rounded-lg hover:bg-teal-600"
             @click.stop="setActiveStep(-1)"
           >
             Actions
