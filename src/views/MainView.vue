@@ -100,15 +100,25 @@ import WorkflowStep from "../components/WorkflowStep.vue";
 import EmptyCanvasState from "../components/EmptyCanvasState.vue";
 import DraggingBlockPreview from "../components/DraggingBlockPreview.vue";
 import Modal from "../components/Modal.vue";
-import MenuIcon from "../components/icons/MenuIcon.vue";
+// Existing Icons
 import SendIcon from "../components/icons/SendIcon.vue";
 import ClockIcon from "../components/icons/ClockIcon.vue";
 import MessageCircleIcon from "../components/icons/MessageCircleIcon.vue";
+// NEW Icons
+import ZapIcon from "../components/icons/ZapIcon.vue";
+import GitBranchIcon from "../components/icons/GitBranchIcon.vue";
+import DatabaseIcon from "../components/icons/DatabaseIcon.vue";
+
 const iconMap = {
   send: SendIcon,
   clock: ClockIcon,
   "message-circle": MessageCircleIcon,
+  // NEW Icon mapping
+  zap: ZapIcon,
+  "git-branch": GitBranchIcon,
+  database: DatabaseIcon,
 };
+
 const getIconComponent = (name) => iconMap[name];
 const getBlockIcon = (type) =>
   blockDefinitions.find((b) => b.type === type)?.icon;
@@ -128,17 +138,18 @@ onUnmounted(() => {
 });
 
 const LOCAL_STORAGE_KEY = "workflow_builder_data_v3";
+
 const blockDefinitions = [
   {
     type: "Send Email",
     icon: "send",
-    color: "#0D7C66",
+    color: "#FF5F1F",
     defaultProps: {
       subject: "New Lead",
       body: "This is the default email body.",
     },
   },
-  { type: "Wait", icon: "clock", color: "#41B3A2", defaultProps: { days: 1 } },
+  { type: "Wait", icon: "clock", color: "#1F51FF", defaultProps: { days: 1 } },
   {
     type: "Send WhatsApp",
     icon: "message-circle",
@@ -146,6 +157,81 @@ const blockDefinitions = [
     defaultProps: {
       phone: "+1234567890",
       message: "Hi, this is a default WhatsApp message.",
+    },
+  },
+  {
+    type: "Make API Call",
+    icon: "zap",
+    color: "#E8A319",
+    defaultProps: {
+      method: "GET",
+      url: "https://api.external.com/data",
+      headers: "{}",
+    },
+  },
+  {
+    type: "Conditional Split",
+    icon: "git-branch",
+    color: "#2C3E50",
+    defaultProps: {
+      condition: "score > 75",
+      truePathName: "High Score",
+      falsePathName: "Low Score",
+    },
+  },
+  {
+    type: "Update CRM",
+    icon: "database",
+    color: "#A0522D",
+    defaultProps: {
+      entity: "Contact",
+      field: "Status",
+      value: "Qualified",
+    },
+  },
+];
+
+const initialWorkflowData = [
+  {
+    id: 1,
+    type: "Send Email",
+    props: {
+      subject: "Welcome to WorkflowCraft!",
+      body: "Thanks for checking out the builder. We've started a small workflow for you.",
+    },
+  },
+  {
+    id: 2,
+    type: "Wait",
+    props: {
+      days: 3,
+    },
+  },
+  {
+    id: 3,
+    type: "Make API Call",
+    props: {
+      method: "POST",
+      url: "https://api.external.com/webhook/track_engagement",
+      headers: '{"Content-Type": "application/json"}',
+    },
+  },
+  {
+    id: 4,
+    type: "Conditional Split",
+    props: {
+      condition: "api_response.status === 'SUCCESS'",
+      truePathName: "Success Path",
+      falsePathName: "Failure Path",
+    },
+  },
+  {
+    id: 5,
+    type: "Update CRM",
+    props: {
+      entity: "Lead",
+      field: "Last Contact Date",
+      value: "NOW()",
     },
   },
 ];
@@ -170,8 +256,10 @@ onMounted(() => {
     try {
       workflow.value = JSON.parse(savedWorkflow);
     } catch (e) {
-      workflow.value = [];
+      workflow.value = initialWorkflowData;
     }
+  } else {
+    workflow.value = initialWorkflowData;
   }
 
   document.addEventListener("touchmove", handleTouchMove, { passive: false });
@@ -189,7 +277,7 @@ watch(
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newWorkflow));
     jsonExport.value = null;
   },
-  { deep: true }
+  { deep: true },
 );
 
 const toggleSidebar = () => {
@@ -245,7 +333,7 @@ function handleTouchEnd(event) {
     "target:",
     targetElement,
     "closestCanvas:",
-    canvasElement
+    canvasElement,
   );
   closeSidebar();
 }
@@ -296,6 +384,12 @@ function getStepDetail(step) {
   if (step.type === "Send Email")
     return `Subject: ${props.subject || "No Subject"}`;
   if (step.type === "Send WhatsApp") return `Target: ${props.phone || "N/A"}`;
+  if (step.type === "Make API Call")
+    return `${props.method || "GET"} to ${props.url || "N/A"}`;
+  if (step.type === "Conditional Split")
+    return `Condition: ${props.condition || "N/A"}`;
+  if (step.type === "Update CRM")
+    return `Set ${props.field || "N/A"} to ${props.value || "N/A"}`;
   return "";
 }
 

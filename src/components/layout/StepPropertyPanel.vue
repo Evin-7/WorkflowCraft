@@ -67,6 +67,90 @@
             ></textarea>
           </div>
         </div>
+
+        <div v-else-if="activeStep.type === 'Make API Call'">
+          <div>
+            <label>Method</label>
+            <select
+              :value="activeStep.props.method"
+              @change="updateProp('method', $event.target.value)"
+            >
+              <option>GET</option>
+              <option>POST</option>
+              <option>PUT</option>
+              <option>DELETE</option>
+            </select>
+          </div>
+          <div>
+            <label>URL</label>
+            <input
+              type="url"
+              :value="activeStep.props.url"
+              @input="updateProp('url', $event.target.value)"
+            />
+          </div>
+          <div>
+            <label>Headers (JSON)</label>
+            <textarea
+              :value="activeStep.props.headers"
+              @input="updateProp('headers', $event.target.value)"
+            ></textarea>
+          </div>
+        </div>
+
+        <div v-else-if="activeStep.type === 'Conditional Split'">
+          <div>
+            <label>Condition (e.g., score > 75)</label>
+            <input
+              type="text"
+              :value="activeStep.props.condition"
+              @input="updateProp('condition', $event.target.value)"
+            />
+          </div>
+          <div>
+            <label>True Path Name</label>
+            <input
+              type="text"
+              :value="activeStep.props.truePathName"
+              @input="updateProp('truePathName', $event.target.value)"
+            />
+          </div>
+          <div>
+            <label>False Path Name</label>
+            <input
+              type="text"
+              :value="activeStep.props.falsePathName"
+              @input="updateProp('falsePathName', $event.target.value)"
+            />
+          </div>
+        </div>
+
+        <div v-else-if="activeStep.type === 'Update CRM'">
+          <div>
+            <label>Entity/Object</label>
+            <input
+              type="text"
+              :value="activeStep.props.entity"
+              @input="updateProp('entity', $event.target.value)"
+            />
+          </div>
+          <div>
+            <label>Field to Update</label>
+            <input
+              type="text"
+              :value="activeStep.props.field"
+              @input="updateProp('field', $event.target.value)"
+            />
+          </div>
+          <div>
+            <label>New Value</label>
+            <input
+              type="text"
+              :value="activeStep.props.value"
+              @input="updateProp('value', $event.target.value)"
+            />
+          </div>
+        </div>
       </div>
 
       <button
@@ -169,11 +253,14 @@ const panelTitle = computed(() => {
 
 const updateProp = (key, value) => {
   if (props.activeStep) {
+    // Ensure 'days' for 'Wait' block remains a number
+    const finalValue = key === "days" ? Number(value) : value;
+
     const updatedStep = {
       ...props.activeStep,
       props: {
         ...props.activeStep.props,
-        [key]: value,
+        [key]: finalValue,
       },
     };
     emit("update:activeStep", updatedStep);
@@ -202,7 +289,9 @@ const handleCopy = () => {
 
 <style scoped>
 .property-editor input,
-.property-editor textarea {
+.property-editor textarea,
+.property-editor select {
+  /* Added select here */
   @apply w-full p-2 border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500;
 }
 .property-editor label {
