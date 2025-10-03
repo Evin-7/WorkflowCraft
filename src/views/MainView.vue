@@ -276,7 +276,7 @@ watch(
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newWorkflow));
     jsonExport.value = null;
   },
-  { deep: true },
+  { deep: true }
 );
 
 const toggleSidebar = () => {
@@ -332,7 +332,7 @@ function handleTouchEnd(event) {
     "target:",
     targetElement,
     "closestCanvas:",
-    canvasElement,
+    canvasElement
   );
   closeSidebar();
 }

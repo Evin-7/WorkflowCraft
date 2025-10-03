@@ -3,5 +3,4 @@
 </template>
 
 <script setup>
-// no imports needed here
 </script>

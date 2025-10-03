@@ -1,4 +1,3 @@
-// src/utils/workflowHelpers.ts
 export interface BlockDefinition {
   type: string;
   icon: string;
@@ -12,7 +11,7 @@ export interface WorkflowStep {
   props: Record<string, any>;
 }
 
-export type IconMap = Record<string, any>; // Vue components as icons
+export type IconMap = Record<string, any>; 
 
 export const getIconComponent = (name: string, iconMap: IconMap) =>
   iconMap[name];
