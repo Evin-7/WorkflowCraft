@@ -17,12 +17,12 @@
         @click="closeSidebar"
       ></div>
       <main
-  class="canvas flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50 transition-all duration-300"
-  @dragover.prevent
-  @drop="handleDrop"
-  @click="clearActiveStep"
-  :style="{ touchAction: draggingBlock ? 'none' : 'auto' }"
->
+        class="canvas flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50 transition-all duration-300"
+        @dragover.prevent
+        @drop="handleDrop"
+        @click="clearActiveStep"
+        :style="{ touchAction: draggingBlock ? 'none' : 'auto' }"
+      >
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl md:text-2xl font-bold text-teal-700">
             Workflow Canvas
@@ -189,7 +189,7 @@ watch(
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newWorkflow));
     jsonExport.value = null;
   },
-  { deep: true },
+  { deep: true }
 );
 
 const toggleSidebar = () => {
@@ -208,26 +208,19 @@ function handleDragStart(event, block) {
   event.dataTransfer.effectAllowed = "copy";
 }
 
-
 function handleTouchStart(event, block) {
   if (!isMobile.value) return;
   event.preventDefault();
-
   const touch = event.touches[0];
   const blockWithId = { ...block, id: Date.now() + Math.random() };
-
   draggingBlock.value = blockWithId;
   dragPosition.value = { x: touch.clientX, y: touch.clientY };
-
-  // <<< close the sidebar right away so the canvas is exposed while dragging
   closeSidebar();
 }
-
 
 function handleTouchMove(event) {
   if (!draggingBlock.value) return;
   event.preventDefault();
-
   const touch = event.touches[0];
   dragPosition.value = { x: touch.clientX, y: touch.clientY };
 }
@@ -245,16 +238,20 @@ function handleTouchEnd(event) {
     });
   }
   draggingBlock.value = null;
-  console.log('touch coords', touch.clientX, touch.clientY, 'target:', targetElement, 'closestCanvas:', canvasElement);
+  console.log(
+    "touch coords",
+    touch.clientX,
+    touch.clientY,
+    "target:",
+    targetElement,
+    "closestCanvas:",
+    canvasElement
+  );
   closeSidebar();
-
 }
-
-
 
 function handleDrop(event) {
   event.preventDefault();
-
   const blockData = event.dataTransfer?.getData("block");
   if (blockData) {
     const block = JSON.parse(blockData);
