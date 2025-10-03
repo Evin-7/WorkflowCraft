@@ -174,7 +174,8 @@ onMounted(() => {
   }
 
   document.addEventListener("touchmove", handleTouchMove, { passive: false });
-  document.addEventListener("touchend", handleTouchEnd);
+  document.addEventListener("touchend", handleTouchEnd, { passive: false });
+
 });
 
 onUnmounted(() => {
@@ -229,25 +230,29 @@ function handleTouchMove(event) {
 function handleTouchEnd(event) {
   if (!draggingBlock.value) return;
   const touch = event.changedTouches[0];
-  const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-  // use .canvas (your main area) instead of .main-layout
   const mainLayoutElement = document.querySelector(".canvas");
-  const droppedOnValidArea =
-    mainLayoutElement && mainLayoutElement.contains(targetElement);
-  if (droppedOnValidArea) {
-    const fakeEvent = {
-      dataTransfer: {
-        getData: (key) =>
-          key === "block" ? JSON.stringify(draggingBlock.value) : null,
-      },
-      preventDefault: () => {},
-    };
-    handleDrop(fakeEvent);
+
+  if (mainLayoutElement) {
+    const rect = mainLayoutElement.getBoundingClientRect();
+    const inside =
+      touch.clientX >= rect.left &&
+      touch.clientX <= rect.right &&
+      touch.clientY >= rect.top &&
+      touch.clientY <= rect.bottom;
+
+    if (inside) {
+      workflow.value.push({
+        id: draggingBlock.value.id,
+        type: draggingBlock.value.type,
+        props: { ...draggingBlock.value.defaultProps },
+      });
+    }
   }
 
   draggingBlock.value = null;
   closeSidebar();
 }
+
 
 function handleDrop(event) {
   event.preventDefault();
