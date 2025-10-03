@@ -167,7 +167,7 @@
       </p>
 
       <button
-        class="w-full mb-3 py-2 px-4 bg-teal-500 text-white font-semibold rounded-lg shadow-md flex items-center justify-center space-x-2 transition-colors hover:bg-teal-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        class="w-full mb-3 py-2 px-4 bg-teal-700 text-white font-semibold rounded-lg shadow-md flex items-center justify-center space-x-2 transition-colors hover:bg-teal-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
         :disabled="workflowLength === 0"
         @click="$emit('simulate-workflow')"
       >

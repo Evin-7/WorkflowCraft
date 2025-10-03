@@ -6,7 +6,7 @@
         :sidebarOpen="sidebarOpen"
         :isMobile="isMobile"
         :blockDefinitions="blockDefinitions"
-        :getIconComponent="getIconComponent"
+        :getIconComponent="(name) => getIconComponent(name, iconMap)"
         @close-sidebar="closeSidebar"
         @dragstart="handleDragStart"
         @touchstart="handleTouchStart"
@@ -43,9 +43,9 @@
             :step="step"
             :index="index"
             :is-active="activeStepIndex === index"
-            :get-block-color="getBlockColor"
-            :get-block-icon="getBlockIcon"
-            :get-icon-component="getIconComponent"
+            :get-block-color="(t) => getBlockColor(t, blockDefinitions)"
+            :get-block-icon="(t) => getBlockIcon(t, blockDefinitions)"
+            :get-icon-component="(n) => getIconComponent(n, iconMap)"
             :get-step-detail="getStepDetail"
             @set-active="setActiveStep(index)"
             @remove-step="removeStep(index)"
@@ -64,8 +64,8 @@
           @close-panel="closePanel"
           @clear-active-step="clearActiveStep"
           @simulate-workflow="simulateWorkflow"
-          @export-workflow="exportWorkflow"
-          @copy-to-clipboard="copyToClipboard"
+          @export-workflow="exportWorkflowToFile"
+          @copy-to-clipboard="copyWorkflow"
         />
       </transition>
       <div
@@ -77,14 +77,14 @@
     <DraggingBlockPreview
       :draggingBlock="draggingBlock"
       :dragPosition="dragPosition"
-      :getBlockColor="getBlockColor"
-      :getIconComponent="getIconComponent"
+      :getBlockColor="(t) => getBlockColor(t, blockDefinitions)"
+      :getIconComponent="(n) => getIconComponent(n, iconMap)"
     />
 
     <Modal
       :open="showModal"
       :steps="workflow"
-      :getBlockColor="getBlockColor"
+      :getBlockColor="(t) => getBlockColor(t, blockDefinitions)"
       :getStepDetail="getStepDetail"
       @close="showModal = false"
     />
@@ -100,30 +100,29 @@ import WorkflowStep from "../components/WorkflowStep.vue";
 import EmptyCanvasState from "../components/EmptyCanvasState.vue";
 import DraggingBlockPreview from "../components/DraggingBlockPreview.vue";
 import Modal from "../components/Modal.vue";
-// Existing Icons
 import SendIcon from "../components/icons/SendIcon.vue";
 import ClockIcon from "../components/icons/ClockIcon.vue";
 import MessageCircleIcon from "../components/icons/MessageCircleIcon.vue";
-// NEW Icons
 import ZapIcon from "../components/icons/ZapIcon.vue";
 import GitBranchIcon from "../components/icons/GitBranchIcon.vue";
 import DatabaseIcon from "../components/icons/DatabaseIcon.vue";
+import {
+  getIconComponent,
+  getBlockIcon,
+  getBlockColor,
+  getStepDetail,
+  exportWorkflow,
+  copyToClipboard,
+} from "../utils/workflowHelpers";
 
 const iconMap = {
   send: SendIcon,
   clock: ClockIcon,
   "message-circle": MessageCircleIcon,
-  // NEW Icon mapping
   zap: ZapIcon,
   "git-branch": GitBranchIcon,
   database: DatabaseIcon,
 };
-
-const getIconComponent = (name) => iconMap[name];
-const getBlockIcon = (type) =>
-  blockDefinitions.find((b) => b.type === type)?.icon;
-const getBlockColor = (type) =>
-  blockDefinitions.find((b) => b.type === type)?.color || "#0D7C66";
 
 const isMobile = ref(false);
 const checkMobile = () => {
@@ -378,21 +377,6 @@ function clearActiveStep() {
   activeStepIndex.value = null;
 }
 
-function getStepDetail(step) {
-  const props = step.props || {};
-  if (step.type === "Wait") return `Duration: ${props.days || 0} day(s)`;
-  if (step.type === "Send Email")
-    return `Subject: ${props.subject || "No Subject"}`;
-  if (step.type === "Send WhatsApp") return `Target: ${props.phone || "N/A"}`;
-  if (step.type === "Make API Call")
-    return `${props.method || "GET"} to ${props.url || "N/A"}`;
-  if (step.type === "Conditional Split")
-    return `Condition: ${props.condition || "N/A"}`;
-  if (step.type === "Update CRM")
-    return `Set ${props.field || "N/A"} to ${props.value || "N/A"}`;
-  return "";
-}
-
 const showModal = ref(false);
 
 function simulateWorkflow() {
@@ -400,13 +384,8 @@ function simulateWorkflow() {
   showModal.value = true;
 }
 
-function exportWorkflow() {
-  const cleanWorkflow = workflow.value.map((step) => ({
-    type: step.type,
-    props: step.props,
-  }));
-  const data = { workflow: cleanWorkflow };
-  const jsonStr = JSON.stringify(data, null, 2);
+function exportWorkflowToFile() {
+  const jsonStr = exportWorkflow(workflow.value);
   jsonExport.value = jsonStr;
   clearActiveStep();
   try {
@@ -425,10 +404,8 @@ function exportWorkflow() {
   }
 }
 
-function copyToClipboard() {
-  if (jsonExport.value) {
-    navigator.clipboard.writeText(jsonExport.value);
-  }
+function copyWorkflow() {
+  if (jsonExport.value) copyToClipboard(jsonExport.value);
 }
 </script>
 
